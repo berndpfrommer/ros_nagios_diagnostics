@@ -1,0 +1,6 @@
+string name
+bool clear
+---
+int8 level
+string message
+string hardware_id

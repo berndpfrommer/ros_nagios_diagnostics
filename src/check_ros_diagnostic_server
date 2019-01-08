@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# check_ros_diagnostic_server
+#
+# $ARG1$ must be a bash script that sources the ros environment
+# $ARG2$ is the name of the diagnostic /diagnostic_agg topic that is to be queried
+#
+# commands.cfg:
+#
+# define command {
+#         command_name check_ros_diagnostic_server
+#         command_line /usr/local/nagios/plugins/check_ros_diagnostic_server -r $ARG1$ -n $ARG2$
+#         }
+
+usage()
+{
+	echo "usage: check_ros_diagnostic_server -r ros_source -n diagnostic_name"
+	exit 3
+}
+
+NAME=
+ROS_SOURCE=/opt/ros/kinetic/setup.bash
+
+while getopts n:r:h OPTNAME; do
+	case "$OPTNAME" in
+	n)
+		NAME="$OPTARG"
+		;;
+	r)
+		ROS_SOURCE="$OPTARG"
+		;;
+	*)
+		usage
+		;;
+	esac
+done
+
+if [ -z "$NAME" ]
+then
+   usage
+fi
+
+source $ROS_SOURCE
+rv=`rosservice call /get_diagnostic $NAME true`
+
+declare -A level_map
+level_map[0]=OK
+level_map[1]=WARN
+level_map[2]=CRITICAL
+level_map[3]=ERROR
+
+num=3
+lev='ERROR'
+msg=''
+hwid=''
+while read -r line; do
+    key=`echo "$line" | cut -d ":" -f 1 | tr -d '[:space:]'`
+    val=`echo "$line" | cut -d ":" -f 2 | tr -d '[:space:]' | tr -d '"' | tr -d \'`
+    if [ "$key" == "level" ]
+    then
+	num=$val
+	lev=${level_map[$val]}
+    fi
+    if [ "$key" == "message" ]
+    then
+       msg=$val
+    fi
+    if [ "$key" == "hardware_id" ]
+    then
+	hwid=$val
+    fi
+done <<< "$rv"
+
+echo $lev": "$msg" "$hwid
+
+exit $num

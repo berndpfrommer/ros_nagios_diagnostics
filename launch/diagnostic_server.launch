@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="ros_nagios_diagnostics" type="diagnostic_server.py"
+	name="ros_nagios_diagnostic_server">
+  </node>
+</launch>
