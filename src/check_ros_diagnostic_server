@@ -42,12 +42,12 @@ fi
 
 source $ROS_SOURCE
 rv=`rosservice call /get_diagnostic $NAME true`
-
+#echo $rv
 declare -A level_map
 level_map[0]=OK
 level_map[1]=WARN
 level_map[2]=CRITICAL
-level_map[3]=ERROR
+level_map[3]=UNKNOWN
 
 num=3
 lev='ERROR'
